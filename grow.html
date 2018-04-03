@@ -1,0 +1,245 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Grow</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <style type= "text/css">
+        </style>
+        <script>
+            window.onload = function() {
+            
+                var grow = {}; //namespace
+                
+                grow.elements = {
+                    status: { 
+                        parent: document.getElementById("status"),
+                        types: {
+                            size: document.getElementById("size"),
+                            fruit: document.getElementById("fruit"),
+                            maturity: document.getElementById("maturity")
+                        }
+                    },
+                    inventory: {
+                        parent: document.getElementById("inventory"),
+                        types: {
+                            basil: document.getElementById("basilInventory")
+                        }
+                    }
+                }
+                
+                grow.inventory = {
+                    basil: {
+                        qty: 0
+                    }
+                }
+                
+                grow.plants = {
+                    basil: {
+                        size: 0,
+                        fruit: 0,
+                        maturity: "seed",
+                    }
+                }
+                
+                grow.fruitChance = function() {
+                    var fruit = 0;
+                    var randomNumber = Math.floor(Math.random() * 100);
+                    if(randomNumber%5 == 0) {
+                        fruit = 1;
+                    }
+                    return fruit;
+                }
+                
+                grow.interval = function(plant, interval) {
+                    var growthInterval = 1;
+                    if(grow.plants[plant].size == 1) {
+                        grow.status("assign", "status", plant, "maturity", "seed");
+                    }
+                    if(grow.plants[plant].size == 10) {
+                        grow.status("assign", "status", plant, "maturity", "sprout");
+                    }
+                    if(grow.plants[plant].size == 20) {
+                        grow.status("assign", "status", plant, "maturity", "young plant");
+                    }
+                    if(grow.plants[plant].size == 30) {
+                        grow.status("assign", "status", plant, "maturity", "mature plant");
+                    }
+                    if(grow.plants[plant].size == 50) {
+                        grow.stop(interval);
+                        grow.status("assign", "status", plant, "maturity", "ready for harvest");
+                    }
+                    //start growing fruit
+                    if(grow.plants[plant].size > 20) {
+                        var fruit = grow.fruitChance();
+                        grow.status("add", "status", plant, "fruit", fruit);
+                    }
+                    grow.status("add", "status", plant, "size", 1);
+                    //console.log(grow.plants[plant]);
+                    
+                }
+                
+                grow.start = function() {
+                    var newPlant = "basil";
+                    
+                    var growing = setInterval(function() { grow.interval(newPlant, growing) } , 100);
+                    
+                    var stopButton = document.getElementById("stop");
+                    stopButton.addEventListener("click", function(e) {
+                        grow.stop(growing);   
+                    });
+                    
+                    var harvestButton = document.getElementById("harvest");
+                    harvestButton.addEventListener("click", function(e) {
+                        grow.harvest(newPlant);
+                    });
+                    
+                    var growButton = document.getElementById("startGrow");
+                    growButton.addEventListener("click", function(e) {
+                        growing = setInterval(function() { grow.interval(newPlant, growing) } , 100);
+                    });
+                }
+                
+                grow.stop = function(interval) {
+                    window.clearInterval(interval);
+                }
+                
+                grow.harvest = function(plant) {
+                    var harvestedFruit = grow.plants[plant].fruit;  
+                    grow.status("add", "inventory", plant, "qty", harvestedFruit);
+                    //set the apple to zero
+                    grow.status("assign", "status", plant, "size", 0);
+                    grow.status("assign", "status", plant, "fruit", 0);
+                    grow.status("assign", "status", plant, "maturity", "harvested");
+                    //console.log(grow.plants);
+                }
+                
+                grow.status = function(operator, category, plant, type, value) {
+                    if(category === "status") {
+                        if(operator === "add") {
+                            grow.plants[plant][type] += value;
+                        } else if(operator === "subtract" && grow.plants[plant][type] > 0) {
+                            grow.plants[plant][type] -= value;
+                        } else {
+                            grow.plants[plant][type] = value;
+                        }
+                        grow.elements[category].types[type].innerHTML = grow.plants[plant][type];
+                    }
+                    if(category === "inventory") {
+                        if(operator === "add") {
+                            grow.inventory[plant][type] += value;
+                        } else if(operator === "subtract" && grow.inventory[plant][type] > 0) {
+                            grow.inventory[plant][type] -= value;
+                        } else {
+                            grow.inventory[plant][type] = value;
+                        }
+                        grow.elements[category].types[plant].innerHTML = grow.inventory[plant][type];
+                    }
+                }
+            
+                grow.start();
+                
+                //make
+                var alchemy = {};
+                
+                alchemy.elements = {
+                    buttons: {
+                        basic: document.getElementById("makeBasicPotion")
+                    },
+                    inventory: {
+                        basic: document.getElementById("basicPotionInventory")
+                    }
+                }
+                
+                alchemy.potionRecipes = {
+                    basic: {
+                        basil: 3
+                    }
+                }
+                
+                alchemy.inventory = {
+                    basic: {
+                        qty: 0
+                    }
+                }
+                
+                alchemy.make = function(potion) {
+                    var ingredients = Object.keys(alchemy.potionRecipes[potion]);
+                    for(var i = 0; i < ingredients.length; i++) {
+                        var ingredient = ingredients[i];
+                        var ingredientRequired = alchemy.potionRecipes[potion][ingredient];
+                        var ingredientInventory = grow.inventory[ingredient].qty;
+                        if(ingredientInventory < ingredientRequired) {
+                            console.log("You do not enough " + ingredient + " to make this potion!")
+                        } else {
+                            //remove ingredients from inventory
+                            grow.status("subtract", "inventory", ingredient, "qty", ingredientRequired);
+                            //make potion
+                            alchemy.status("add", potion, 1);
+                            console.log("You have constructed a " + potion + " potion.");
+                        }
+                    }
+                }
+                
+                //todo: merge this with grow.status
+                alchemy.status = function(operator, potion, value) {
+                    if(operator === "add") {
+                        alchemy.inventory[potion].qty += value;
+                    } else if(operator === "subtract" && alchemy.inventory[potion].qty > 0) {
+                        alchemy.inventory[potion].qty -= value;
+                    } else {
+                        alchemy.inventory[potion].qty = value;
+                    }
+                    alchemy.elements.inventory[potion].innerHTML = alchemy.inventory[potion].qty;
+                }
+                
+                alchemy.start = function() {
+                
+                    var makeBasicPotionButton = alchemy.elements.buttons.basic;
+                    makeBasicPotionButton.addEventListener("click", function(e) {
+                        alchemy.make("basic");
+                    });
+                }
+                
+                alchemy.start();
+                
+            }
+        </script>
+    </head>
+    <body>
+        <main>
+            <section id="status">
+                <h3>Status</h3>
+                <table>
+                    <tr>
+                        <th>plant size</th><td id="size">0</td>
+                    </tr>
+                    <tr>
+                        <th>fruit</th><td id="fruit">0</td>
+                    </tr>
+                    <tr>
+                        <th>maturity</th><td id="maturity">0</td>
+                    </tr>
+                </table>
+            </section>
+            <section id="inventory">
+                <h3>Inventory</h3>
+                <h4>Ingredients</h4>
+                <table> 
+                    <tr>
+                        <th>basil</th><td id="basilInventory">0</td>
+                    </tr>
+                </table>
+                <h4>Potions</h4>
+                <table> 
+                    <tr>
+                        <th>basic potions</th><td id="basicPotionInventory">0</td>
+                    </tr>
+                </table>
+            </section>
+            <button id="stop">stop</button>
+            <button id="harvest">harvest</button>
+            <button id="startGrow">grow</button>
+            <button id="makeBasicPotion">make basic potion</button>
+        </main>
+    </body>
+</html>

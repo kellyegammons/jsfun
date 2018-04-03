@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+    <head>
+        <style type="text/css">
+        body {
+            font-size: 2em;
+            font-family: sans-serif;
+        }
+        input {
+            background: #fff;
+            border: 2px solid #12587D;
+            padding: .2em;
+            font-size: 2em;
+            border-radius: .25em;
+        }
+        input:focus {
+            background: #12587D;
+            color: #fff;
+        }
+        button {
+            background: #EFC1B2;
+            color: #555;
+            border: 2px solid #9A4326;
+            box-shadow: 1px 1px 1px #666;
+            font-weight: bold;
+            font-size: 2em;
+            padding: .2em;
+            cursor: pointer;
+            border-radius: .25em;
+        }
+        button:hover {
+            background: #9A4326;
+            color: #fff;
+        }
+        th {
+            text-align: right;
+            color: #555;
+        }
+        </style>
+        
+        <script>
+            window.onload = function() {
+            
+                var slp = {}
+                slp.values = {//memory
+                    slope: 0,
+                    rise: 0,
+                    run: 0
+                }
+                slp.calc = {};//calculations
+                slp.calc.slope = function() {
+                    return slp.values.rise / slp.values.run;
+                }
+                slp.calc.rise = function() {
+                    return slp.values.slope * slp.values.run;
+                }
+                slp.calc.run = function() {
+                    return slp.values.rise / slp.values.slope;
+                }
+                slp.setProgram = function() {
+                    //get html elements
+                    var form = document.getElementById("slopeform");
+                    var buttons = form.getElementsByTagName("button");
+                    var inputs = form.getElementsByTagName("input");
+                    for (var i = 0; i < buttons.length; i++) {//loop through the buttons
+                        buttons[i].addEventListener("click", function(e) {//add an event listener to each button for "click"
+                            var buttonName = e.target.getAttribute("name"); //remember the name of the button clicked
+                            for (var j = 0; j < inputs.length; j++) {//loop through each input element  
+                                var inputName = inputs[j].id; //remember the name of the input element 
+                                slp.values[inputName] = inputs[j].value; //save the value seen in each input to memory
+                            }
+                            slp.values[buttonName] = slp.calc[buttonName](); //calculate the desired value based on the other two values and display it.
+                            document.getElementById(buttonName).value = slp.values[buttonName];
+                        });
+                    }
+                
+                }
+                slp.setProgram();//begin the program
+                
+                
+               
+            }
+        </script>
+    </head>
+    <body>
+    
+        <form id="slopeform" onsubmit="return false;">
+            <table>
+                <tr>
+                    <th class="slope">slope
+                    </th>
+                    <td class="slope">
+                        <input type="textbox" id="slope" value="0">
+                    </td>
+                    <td>
+                        <button name="slope">Calculate</button>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="rise">rise
+                    </th>
+                    <td class="rise">
+                        <input type="textbox" id="rise" value="0">
+                    </td>
+                    <td>
+                        <button name="rise">Calculate</button>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="run">run
+                    </th>
+                    <td class="run">
+                        <input type="textbox" id="run" value="0">
+                    </td>
+                    <td>
+                        <button name="run">Calculate</button>
+                    </td>
+                </tr>
+           </table>
+            
+        </form>
+        
+    </body>
+</html>
+
